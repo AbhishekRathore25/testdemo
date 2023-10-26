@@ -4,39 +4,58 @@ const express = require('express');
 const app = express();
 
 const admin = require("firebase-admin");
+const credentials = require(".//key.json");
 
-const credentials = require(".//testdemo-f2c6f-firebase-adminsdk-lj3cu-e817b1d854.jsonn");
+const newNote = { title: "My New Note", content: "This is a sample note." };
+const docRef = db.collection('notes').add(newNote);
 
-admin.initializeApp({
+const customDocId = 'custom-document-id';
+const customDocRef = db.collection('notes').doc(customDocId);
+customDocRef.set(newNote);
 
-credential: admin.credential.cert(credentials)
-});
+const notesCollection = db.collection('notes');
+notesCollection.get()
+  .then((snapshot) => {
+    snapshot.forEach((doc) => {
+      console.log(doc.id, '=>', doc.data());
+    });
+  })
+  .catch((error) => {
+    console.error('Error getting documents: ', error);
+  });
 
-app.post('/signup', async (req, res) => {
-console.log(req.body)
-const user = {
 
-email: req.body.email,
-password: req.body.password
-}
+const query = notesCollection.where('title', '==', 'My New Note');
+query.get()
+  .then((snapshot) => {
+    snapshot.forEach((doc) => {
+      console.log(doc.id, '=>', doc.data());
+    });
+  })
+  .catch((error) => {
+    console.error('Error querying documents: ', error);
+  });
+  const docToUpdate = db.collection('notes').doc('document-id-to-update');
 
+  const updateData = {
+    title: 'Updated Title',
+    content: 'Updated content for the note.'
+  };
+  
+  docToUpdate.update(updateData)
+    .then(() => {
+      console.log('Document updated successfully');
+    })
+    .catch((error) => {
+      console.error('Error updating document: ', error);
+    });
+    const docToDelete = db.collection('notes').doc('document-id-to-delete');
 
-
-const userResponse = await admin.auth().createUser({
-
-email: user.email,
-
-password: user.password,
-
-emailVerified: false,
-
-disabled: false
-});
-
-res.json(userResponse);
-})
-
-const PORT = process.env.PORT || 8080;
-app.listen(PORT,() => {
-    console.log('server is running on PORT $(PORT),' );
-});
+    docToDelete.delete()
+      .then(() => {
+        console.log('Document deleted successfully');
+      })
+      .catch((error) => {
+        console.error('Error deleting document: ', error);
+      });
+      
